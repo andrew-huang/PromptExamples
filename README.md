@@ -9,7 +9,7 @@ Easily turn AI21 Labs' J-1 Grande Instruct model into a medical chatbot using a 
 4. Generate a completion with the AI21 Labs API.
 5. Ask followup questions with prior conversation history automatically included.
 
-Bonus points: I submitted a [pull request](https://github.com/hwchase17/langchain/pull/1069) to Langchain to better support stop sequences with AI21.
+Also submitted a [pull request](https://github.com/hwchase17/langchain/pull/1069) to Langchain to better support stop sequences with AI21.
 
 ## 2. DoctorBotScraper.ipynb
 
