@@ -33,12 +33,12 @@ Have a conversation with a bot using an AWS Lambda endpoint and save the respons
 
 1. When the Lambda is called, use the data in the params on the bot, user, and prior messages, to construct a chat prompt.
 2. Calculate the tokens used in the prompt with tiktoken and if it's over the limit for the model, don't include the oldest messages.
-3. Generate a completion with OpenAI / Cohere, with a fallback to use NLPCloud if the response is blocked for bad language, etc...
+3. Generate a completion with OpenAI, with a fallback to use NLPCloud if the response is blocked for bad language, etc...
 4. Save the bot's response to DynamoDB using a GraphQL mutation via AWS AppSync.
 5. On the frontend I have a GraphQL subscription that auto fetches the bot's response in realtime.
 
 ## 5. PythonAWSBot.ipynb
 
-Same thing as above but instead of being written in Nodejs, I wrote it in Python.
+Same thing as above but instead of being written in Nodejs, I wrote it in Python and using Cohere.
 
 Also have a lot of smaller prompts and projects for generating and summarizing text content, as well as image content with Stable Diffusion, but that are not included in this repo.
