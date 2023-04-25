@@ -2,14 +2,12 @@
 
 ## 1. DoctorBot.ipynb
 
-Easily turn AI21 Labs' J-1 Grande Instruct model into a medical chatbot using a web scraper, VectorDB, and conversational memory.
+Easily turn GPT-4 or any other model into a medical chatbot using a web scraper, VectorDB, and conversational memory.
 1. Scrape all of WebMD using DoctorBotScraper.ipynb and write it all into a single text file.
 2. Chunk the text file and upload it to a vector database hosted on Pinecone.
 3. Ask a question and auto insert the most relevant docs in your VectorDB into a chat prompt using Langchain.
-4. Generate a completion with the AI21 Labs API.
+4. Generate a completion with the OpenAI API.
 5. Ask followup questions with prior conversation history automatically included.
-
-Also submitted a [pull request](https://github.com/hwchase17/langchain/pull/1069) to Langchain to better support stop sequences with AI21.
 
 ## 2. DoctorBotScraper.ipynb
 

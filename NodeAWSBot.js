@@ -1,17 +1,14 @@
 require('es6-promise').polyfill();
 require('isomorphic-fetch');
 const {v4: uuidv4} = require('uuid');
+const {SecretsManagerClient, GetSecretValueCommand} = require("@aws-sdk/client-secrets-manager");
 const {AWSAppSyncClient} = require('aws-appsync');
 const gql = require('graphql-tag');
 const {createMessage} = require('./graphql.js');
 const { Configuration, OpenAIApi } = require("openai");
 const {encode} = require('./mod');
-const configuration = new Configuration({
-  apiKey: 'INSERT-KEY',
-});
-const openai = new OpenAIApi(configuration);
 
-async function updateAppSync(text, chatId, botId) {
+async function updateAppSync(appSyncKey, text, chatId, botId) {
   const client = new AWSAppSyncClient({
     url: 'https://INSERTURL.appsync-api.us-west-2.amazonaws.com/graphql',
     region: 'us-west-2',
@@ -30,7 +27,7 @@ async function updateAppSync(text, chatId, botId) {
         chatId: chatId,
         botId: botId,
         content: text,
-        createdAt: Math.round(Date.now() / 1000),
+        createdAt: new Date(Date.now()).toISOString(),
       },
     },
   });
@@ -61,6 +58,13 @@ function getTokenCount(string) {
 // ${params.bot.name} is a talkative, flirtatious woman who lives in Japan
 
 exports.handler = async (event, context, callback) => {
+  let secretClient = new SecretsManagerClient({region: "us-west-2"});
+  let response = await secretClient.send(new GetSecretValueCommand({ SecretId: "Chatbot", VersionStage: "AWSCURRENT"}));
+  let secret = JSON.parse(response.SecretString);
+
+  let configuration = new Configuration({apiKey: secret.OpenAIKey});
+  let openai = new OpenAIApi(configuration);
+
   let params = event;
   let max_allowed_tokens = 2048;
   let max_generated_tokens = 100;
@@ -70,10 +74,7 @@ exports.handler = async (event, context, callback) => {
   let botFirstName = params.bot.name.split(' ')[0];
   let newInput = `${userFirstName}: ${params.content}\n${botFirstName}:`;
   let stopString = `${userFirstName}:`;
-  let previous_messages_chunks = sliceIntoChunks(
-      params.lastMessages,
-      2,
-  ).reverse();
+  let previous_messages_chunks = sliceIntoChunks(params.lastMessages, 2).reverse();
   if (params.lastMessages.length === 8) {
     max_allowed_tokens =
         max_allowed_tokens -
@@ -107,17 +108,19 @@ exports.handler = async (event, context, callback) => {
       })
       .then(async function (response) {
         await updateAppSync(
+            secret.AWSKey,
             response.data.choices[0].text.trim(),
             params.chatId,
             params.bot.id,
         );
       })
       .catch(async function (err) {
+        // This is a fallback just in case OpenAI flags the input or output
         console.log(err);
         const NLPCloudClient = require('nlpcloud');
         const nlp = new NLPCloudClient(
             'finetuned-gpt-neox-20b',
-            'INSERT-KEY',
+            secret.NLPCloudKey,
             true,
         );
         let messagesArray = previous_messages_chunks.map(chunk => {
@@ -127,6 +130,7 @@ exports.handler = async (event, context, callback) => {
             .chatbot(params.content, background, messagesArray)
             .then(async function (response) {
               await updateAppSync(
+                  secret.AWSKey,
                   response.data.response,
                   params.chatId,
                   params.bot.id,
